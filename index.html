@@ -27,10 +27,127 @@
 		<meta class="foundation-mq-medium">
 		<meta class="foundation-mq-small-only">
 		<meta class="foundation-mq-small">
-		<style></style>
+		    <!-- 保留原有的head内容 -->
+		       <style>
+		           /* 音乐播放器样式 */
+		           .music-player {
+		               position: fixed;
+		               bottom: 20px;
+		               right: 20px;
+		               z-index: 1000;
+		               background: rgba(255, 255, 255, 0.9);
+		               border-radius: 10px;
+		               padding: 15px;
+		               box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+		               width: 250px;
+		           }
+		           
+		           .music-player h4 {
+		               margin: 0 0 10px 0;
+		               color: #333;
+		               font-size: 16px;
+		               border-bottom: 1px solid #eee;
+		               padding-bottom: 8px;
+		           }
+		           
+		           .playlist {
+		               list-style: none;
+		               margin: 0;
+		               padding: 0;
+		               max-height: 200px;
+		               overflow-y: auto;
+		           }
+		           
+		           .playlist li {
+		               padding: 8px 10px;
+		               cursor: pointer;
+		               border-radius: 5px;
+		               margin-bottom: 5px;
+		               transition: background 0.2s;
+		           }
+		           
+		           .playlist li:hover {
+		               background: #f0f0f0;
+		           }
+		           
+		           .playlist li.active {
+		               background: linear-gradient(135deg, #6e8efb, #a777e3);
+		               color: white;
+		           }
+		           
+		           .player-controls {
+		               display: flex;
+		               justify-content: space-between;
+		               margin-top: 10px;
+		           }
+		           
+		           .control-btn {
+		               background: linear-gradient(135deg, #6e8efb, #a777e3);
+		               color: white;
+		               border: none;
+		               border-radius: 50px;
+		               padding: 8px 15px;
+		               font-size: 14px;
+		               cursor: pointer;
+		               transition: all 0.3s;
+		               flex-grow: 1;
+		               margin: 0 3px;
+		           }
+		           
+		           .control-btn:hover {
+		               background: linear-gradient(135deg, #5d7de8, #9666d6);
+		               transform: translateY(-2px);
+		           }
+		           
+		           .progress-container {
+		               margin-top: 10px;
+		               height: 4px;
+		               background: #eee;
+		               border-radius: 2px;
+		               cursor: pointer;
+		           }
+		           
+		           .progress-bar {
+		               height: 100%;
+		               background: linear-gradient(135deg, #6e8efb, #a777e3);
+		               border-radius: 2px;
+		               width: 0%;
+		           }
+		           
+		           .time-display {
+		               display: flex;
+		               justify-content: space-between;
+		               font-size: 12px;
+		               color: #666;
+		               margin-top: 5px;
+		           }
+		       </style>
 	</head>
 	<body>
-        <embed src="music/不再犹豫.mp3" height="0" width="0"  loop='true'/>
+		  <!-- 升级后的音乐播放器 -->
+		    <div class="music-player">
+		        <h4><i class="fi-music"></i> 背景音乐</h4>
+		        <ul class="playlist">
+					<li data-src="music/如果你也听说.mp3">如果你也听说</li>
+					<li data-src="music/包容.mp3">包容</li>
+					<li data-src="music/假如爱有天意.mp3">假如爱有天意</li>
+		            <li data-src="music/不再犹豫.mp3" class="active">不再犹豫</li>
+		            <!-- 可以继续添加更多歌曲 -->
+		        </ul>
+		        <div class="progress-container" id="progressContainer">
+		            <div class="progress-bar" id="progressBar"></div>
+		        </div>
+		        <div class="time-display">
+		            <span id="currentTime">0:00</span>
+		            <span id="duration">0:00</span>
+		        </div>
+		        <div class="player-controls">
+		            <button class="control-btn" id="prevBtn"><i class="fi-rewind"></i></button>
+		            <button class="control-btn" id="playBtn"><i class="fi-play"></i> 播放</button>
+		            <button class="control-btn" id="nextBtn"><i class="fi-fast-forward"></i></button>
+		        </div>
+		        <audio id="bgMusic"></audio>
+		    </div>
 		<div id="header">
 			<div class="row animated fadeInDown">
 				<div class="large-2 columns">
@@ -644,4 +761,128 @@
 			</div>
 		</div>
 	</body>
+	 <script>
+	        // 音乐播放器功能实现
+	        document.addEventListener('DOMContentLoaded', function() {
+	            const audio = document.getElementById('bgMusic');
+	            const playBtn = document.getElementById('playBtn');
+	            const prevBtn = document.getElementById('prevBtn');
+	            const nextBtn = document.getElementById('nextBtn');
+	            const progressBar = document.getElementById('progressBar');
+	            const progressContainer = document.getElementById('progressContainer');
+	            const currentTimeEl = document.getElementById('currentTime');
+	            const durationEl = document.getElementById('duration');
+	            const playlistItems = document.querySelectorAll('.playlist li');
+	            
+	            let currentSongIndex = 0;
+	            
+	            // 加载歌曲
+	            function loadSong(index) {
+	                const song = playlistItems[index];
+	                audio.src = song.getAttribute('data-src');
+	                
+	                // 更新活跃状态
+	                playlistItems.forEach(item => item.classList.remove('active'));
+	                song.classList.add('active');
+	                
+	                // 更新按钮状态
+	                playBtn.innerHTML = '<i class="fi-play"></i> 播放';
+	            }
+	            
+	            // 播放歌曲
+	            function playSong() {
+	                audio.play();
+	                playBtn.innerHTML = '<i class="fi-pause"></i> 暂停';
+	            }
+	            
+	            // 暂停歌曲
+	            function pauseSong() {
+	                audio.pause();
+	                playBtn.innerHTML = '<i class="fi-play"></i> 播放';
+	            }
+	            
+	            // 上一首
+	            function prevSong() {
+	                currentSongIndex--;
+	                if (currentSongIndex < 0) {
+	                    currentSongIndex = playlistItems.length - 1;
+	                }
+	                loadSong(currentSongIndex);
+	                playSong();
+	            }
+	            
+	            // 下一首
+	            function nextSong() {
+	                currentSongIndex++;
+	                if (currentSongIndex > playlistItems.length - 1) {
+	                    currentSongIndex = 0;
+	                }
+	                loadSong(currentSongIndex);
+	                playSong();
+	            }
+	            
+	            // 更新进度条
+	            function updateProgress(e) {
+	                const { duration, currentTime } = e.srcElement;
+	                const progressPercent = (currentTime / duration) * 100;
+	                progressBar.style.width = `${progressPercent}%`;
+	                
+	                // 更新时间显示
+	                const durationMinutes = Math.floor(duration / 60);
+	                let durationSeconds = Math.floor(duration % 60);
+	                if (durationSeconds < 10) {
+	                    durationSeconds = `0${durationSeconds}`;
+	                }
+	                
+	                if (duration) {
+	                    durationEl.textContent = `${durationMinutes}:${durationSeconds}`;
+	                }
+	                
+	                const currentMinutes = Math.floor(currentTime / 60);
+	                let currentSeconds = Math.floor(currentTime % 60);
+	                if (currentSeconds < 10) {
+	                    currentSeconds = `0${currentSeconds}`;
+	                }
+	                currentTimeEl.textContent = `${currentMinutes}:${currentSeconds}`;
+	            }
+	            
+	            // 设置进度条
+	            function setProgress(e) {
+	                const width = this.clientWidth;
+	                const clickX = e.offsetX;
+	                const duration = audio.duration;
+	                audio.currentTime = (clickX / width) * duration;
+	            }
+	            
+	            // 事件监听
+	            playBtn.addEventListener('click', () => {
+	                const isPlaying = playBtn.innerHTML.includes('暂停');
+	                
+	                if (isPlaying) {
+	                    pauseSong();
+	                } else {
+	                    playSong();
+	                }
+	            });
+	            
+	            prevBtn.addEventListener('click', prevSong);
+	            nextBtn.addEventListener('click', nextSong);
+	            
+	            audio.addEventListener('timeupdate', updateProgress);
+	            audio.addEventListener('ended', nextSong);
+	            progressContainer.addEventListener('click', setProgress);
+	            
+	            // 点击播放列表中的歌曲
+	            playlistItems.forEach((item, index) => {
+	                item.addEventListener('click', () => {
+	                    currentSongIndex = index;
+	                    loadSong(currentSongIndex);
+	                    playSong();
+	                });
+	            });
+	            
+	            // 加载第一首歌
+	            loadSong(currentSongIndex);
+	        });
+	    </script>
 </html>
